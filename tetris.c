@@ -17,6 +17,27 @@ struct ImagenRep {
 };
 typedef struct ImagenRep Imagen;
 
+int marcador = 0;
+
+void int_to_string(char dest[10], int punt){
+  int i = 0;
+  do{
+    int b = punt % 10;
+    punt = punt / 10;
+    dest[i] = b + '0';
+    i++;
+  } while(punt != 0);
+  dest[i--] = 0;
+  int j = 0;
+  while(j < i){
+    char aux = dest[j];
+    dest[j] = dest[i];
+    dest[i] = aux;
+    j++;
+    i--;
+  }
+}
+
 Pixel* imagen_pixel_addr(Imagen *img, int x, int y) {
   return &(img->data[0]) + (y * img->ancho + x) * sizeof(Pixel);
 }
@@ -88,6 +109,15 @@ void imagen_dibuja_imagen_rotada(Imagen *dst, Imagen *src, int dst_x, int dst_y)
   }
 }
 
+void imagen_dibuja_puntuacion(Imagen *dst, int score,  int x, int y){
+  char punt[10];
+  int_to_string(punt, marcador);
+  int i = 0;
+  while(punt[i] != 0){
+    imagen_set_pixel(dst, i + x, y, punt[i]);
+    i++;
+  }
+}
 
 Imagen pieza_jota = { 2, 3,
                              { 0,   '#',
@@ -150,6 +180,12 @@ void actualizar_pantalla(void) {
     imagen_set_pixel(pantalla, pos_campo_x - 1 + x, pos_campo_y + campo->alto, '-');
   }
 
+  // Dibuja el marcador:
+  char puntuacion[] = "Puntuacion:";
+  for(int x = 0; x < 11; x++){
+    imagen_set_pixel(pantalla, x, 0, puntuacion[x]);
+  }
+  imagen_dibuja_puntuacion(pantalla, marcador, 11, 0);
   imagen_dibuja_imagen(pantalla, campo, pos_campo_x, pos_campo_y);
   imagen_dibuja_imagen(pantalla, pieza_actual, pieza_actual_x + pos_campo_x, pieza_actual_y + pos_campo_y);
 
@@ -192,6 +228,7 @@ bool intentar_movimiento(int x, int y) {
 void bajar_pieza_actual(void) {
   if (!intentar_movimiento(pieza_actual_x, pieza_actual_y + 1)) {
     imagen_dibuja_imagen(campo, pieza_actual, pieza_actual_x, pieza_actual_y);
+    marcador++;
     nueva_pieza_actual();
   }
 }
@@ -247,6 +284,7 @@ void jugar_partida(void) {
   imagen_init(campo, 14, 18, PIXEL_VACIO);
   nueva_pieza_actual();
   acabar_partida = false;
+  marcador = 0;
 
   int pausa = 1000;
   Hora antes = get_time();
