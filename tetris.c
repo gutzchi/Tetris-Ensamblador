@@ -119,6 +119,10 @@ void imagen_dibuja_puntuacion(Imagen *dst, int score,  int x, int y){
   }
 }
 
+void print_game_over(void){
+
+}
+
 Imagen pieza_jota = { 2, 3,
                              { 0,   '#',
                                0,   '#',
@@ -164,6 +168,7 @@ Imagen *const imagen_auxiliar = &imagen_auxiliar_buffer;
 int pieza_actual_x;
 int pieza_actual_y;
 bool acabar_partida;
+bool game_over = false;
 
 void actualizar_pantalla(void) {
   const int pos_campo_x = 1;
@@ -227,9 +232,14 @@ bool intentar_movimiento(int x, int y) {
 
 void bajar_pieza_actual(void) {
   if (!intentar_movimiento(pieza_actual_x, pieza_actual_y + 1)) {
-    imagen_dibuja_imagen(campo, pieza_actual, pieza_actual_x, pieza_actual_y);
-    marcador++;
-    nueva_pieza_actual();
+    if(pieza_actual_y == 0){
+      game_over = true;
+    }
+    else{
+      imagen_dibuja_imagen(campo, pieza_actual, pieza_actual_x, pieza_actual_y);
+      marcador++;
+      nueva_pieza_actual();
+    }
   }
 }
 
@@ -284,19 +294,21 @@ void jugar_partida(void) {
   imagen_init(campo, 14, 18, PIXEL_VACIO);
   nueva_pieza_actual();
   acabar_partida = false;
+  game_over = false;
   marcador = 0;
 
   int pausa = 1000;
   Hora antes = get_time();
   actualizar_pantalla();
-  while (!acabar_partida) {
+  while (!acabar_partida && !game_over) {
     procesar_entrada();
     Hora ahora = get_time();
     int transcurrido = ahora - antes;
     if (transcurrido > pausa) {
       antes = ahora;
       bajar_pieza_actual();
-      actualizar_pantalla();
+      if(!game_over) actualizar_pantalla();
+      else print_game_over();
     }
   }
 }
